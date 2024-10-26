@@ -19,7 +19,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState("");
   const [policyError, setPolicyError] = useState(false);
-  const { registrationError } = useSelector((state) => state.user);
+  const { loading, registrationError } = useSelector((state) => state.user);
 
   const register = (event) => {
     event.preventDefault();
@@ -114,8 +114,19 @@ const RegisterPage = () => {
             checked={formData.policy}
           />
         </Form.Group>
-        <Button variant="danger" type="submit">
-          회원가입
+        <Button 
+          variant="danger" 
+          type="submit" 
+          disabled={loading}
+        >
+          {loading ? (
+            <div className="d-flex align-items-center gap-2">
+              <span className="spinner-border spinner-border-sm" />
+              <span>처리중...</span>
+            </div>
+          ) : (
+            "회원가입"
+          )}
         </Button>
       </Form>
     </Container>

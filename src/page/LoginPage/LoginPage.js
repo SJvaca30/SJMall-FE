@@ -30,9 +30,13 @@ const Login = () => {
     //구글 로그인 하기
   };
 
-  if (user) {
-    navigate("/");
-  }
+  useEffect(() => {
+    // 이미 로그인한 유저는 메인페이지로 리다이렉트
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   return (
     <>
       <Container className="login-area">

@@ -1,7 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 import { showToastMessage } from "../common/uiSlice";
-
 // 비동기 액션 생성
 export const getProductList = createAsyncThunk(
   "products/getProductList",
@@ -15,7 +14,22 @@ export const getProductDetail = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/createProduct",
-  async (formData, { dispatch, rejectWithValue }) => {}
+  async (formData, { dispatch, rejectWithValue }) => {
+    try {
+      // 디버깅
+      console.log("API로 보내는 데이터:", formData);
+      const response = await api.post("/product", formData);
+      if (response.status !== 200) {
+        throw new Error(response.error);
+      }
+      dispatch(
+        showToastMessage({ message: "상품 생성 완료", status: "success" })
+      );
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.error);
+    }
+  }
 );
 
 export const deleteProduct = createAsyncThunk(
@@ -51,7 +65,21 @@ const productSlice = createSlice({
       state.success = false;
     },
   },
-  extraReducers: (builder) => {},
+  extraReducers: (builder) => {
+    builder.addCase(createProduct.pending, (state, action) => {
+      state.loading = true;
+    });
+    builder.addCase(createProduct.fulfilled, (state, action) => {
+      state.loading = false;
+      state.error = "";
+      state.success = true; // 상품생성 성공했다? 다이얼로그를 닫고, 실패했다? 실패메세지를 다이얼로그에 보여주기
+    });
+    builder.addCase(createProduct.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+      state.success = false;
+    });
+  },
 });
 
 export const { setSelectedProduct, setFilteredList, clearError } =

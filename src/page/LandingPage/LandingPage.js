@@ -31,9 +31,9 @@ const LandingPage = () => {
         ) : (
           <div className="text-align-center empty-bag">
             {name === "" ? (
-              <h2>No registered products!</h2>
+              <h2>등록된 상품이 없습니다.</h2>
             ) : (
-              <h2>No products match '{name}'</h2>
+              <h2>다음 결과가 없습니다. '{name}'</h2>
             )}
           </div>
         )}

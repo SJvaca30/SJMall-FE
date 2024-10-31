@@ -10,11 +10,9 @@ import ProductTable from "./component/ProductTable";
 
 const AdminProductPage = () => {
   const navigate = useNavigate();
-  const [query] = useSearchParams();
+  const [query] = useSearchParams(); // url 파라미터 읽어오기
   const dispatch = useDispatch();
-  const { productList, totalPageNum, loading } = useSelector(
-    (state) => state.product
-  );
+  const { productList, totalPageNum } = useSelector((state) => state.product);
   const [showDialog, setShowDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState({
     page: query.get("page") || 1,
@@ -37,7 +35,7 @@ const AdminProductPage = () => {
   //상품리스트 가져오기 (url쿼리 맞춰서)
   useEffect(() => {
     dispatch(getProductList({ ...searchQuery }));
-  }, [query, dispatch]);
+  }, [showDialog, query]);
 
   useEffect(() => {
     //검색어나 페이지가 바뀌면 url바꿔주기 (검색어또는 페이지가 바뀜 => url 바꿔줌=> url쿼리 읽어옴=> 이 쿼리값 맞춰서  상품리스트 가져오기)
@@ -45,9 +43,8 @@ const AdminProductPage = () => {
       delete searchQuery.name;
     }
     const params = new URLSearchParams(searchQuery);
-    const queryString = params.toString();
-
-    navigate("?" + queryString);
+    const query = params.toString();
+    navigate(`?${query}`);
   }, [searchQuery]);
 
   const deleteItem = (id) => {
@@ -62,6 +59,7 @@ const AdminProductPage = () => {
   const handleClickNewItem = () => {
     //new 모드로 설정하고
     setMode("new");
+
     // 다이얼로그 열어주기
     setShowDialog(true);
   };
@@ -70,22 +68,6 @@ const AdminProductPage = () => {
     //  쿼리에 페이지값 바꿔주기
     setSearchQuery({ ...searchQuery, page: selected + 1 });
   };
-
-  if (loading) {
-    return (
-      <div className="loading-state">
-        <div className="spinner-border text-primary me-2" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        데이터를 불러오는 중입니다...
-      </div>
-    );
-  }
-
-  // searchbokx에서 검색어를 읽어오기 => 엔터를 치면 => searchQuery객체가 업데이트 된다 ex) {name: 스트레이트 팬츠}
-  // => searchquery 객체 안에 아이템 기준으로 url을 새로 생성해서 호출 ex) &name=스트레이트+팬츠
-  // => url 쿼리 읽어오기 => url쿼리 기준으로 BE에 검색조건과함께 호출한다
-  
 
   return (
     <div className="locate-center">
@@ -104,7 +86,7 @@ const AdminProductPage = () => {
 
         <ProductTable
           header={tableHeader}
-          data={productList || []}
+          data={productList}
           deleteItem={deleteItem}
           openEditForm={openEditForm}
         />
@@ -112,8 +94,8 @@ const AdminProductPage = () => {
           nextLabel="next >"
           onPageChange={handlePageClick}
           pageRangeDisplayed={5}
-          pageCount={100}
-          forcePage={searchQuery.page - 1}
+          pageCount={totalPageNum} // 총 페이지 수
+          forcePage={searchQuery.page - 1} // 현재 페이지
           previousLabel="< previous"
           renderOnZeroPageCount={null}
           pageClassName="page-item"

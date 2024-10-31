@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Alert, Button, Container, Form } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Form, Button, Alert, Spinner } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 
@@ -15,27 +15,34 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
     policy: false,
+    admin: false,
   });
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState("");
   const [policyError, setPolicyError] = useState(false);
-  const { loading, registrationError } = useSelector((state) => state.user);
+  const { registrationError, loading } = useSelector((state) => state.user);
 
   const register = (event) => {
     event.preventDefault();
-    const { name, email, password, confirmPassword, policy } = formData;
+
+    const { name, email, password, confirmPassword, policy, admin } = formData;
     const checkConfirmPassword = password === confirmPassword;
+    
+    if(name === "") {
+      setPolicyError("Please enter your name");
+      return;
+    }
     if (!checkConfirmPassword) {
-      setPasswordError("비밀번호 중복확인이 일치하지 않습니다.");
+      setPasswordError("Password confirmation does not match.");
       return;
     }
     if (!policy) {
-      setPolicyError(true);
+      setPolicyError("Please agree to the Terms and Conditions.");
       return;
     }
     setPasswordError("");
     setPolicyError(false);
-    dispatch(registerUser({ name, email, password, navigate }));
+    dispatch(registerUser({ name, email, password, admin, navigate }));
   };
 
   const handleChange = (event) => {
@@ -52,10 +59,10 @@ const RegisterPage = () => {
 
   return (
     <Container className="register-area">
-      {registrationError && (
+      {(registrationError || policyError) && (
         <div>
           <Alert variant="danger" className="error-message">
-            {registrationError}
+            {registrationError || policyError}
           </Alert>
         </div>
       )}
@@ -107,25 +114,37 @@ const RegisterPage = () => {
         <Form.Group className="mb-3">
           <Form.Check
             type="checkbox"
-            label="이용약관에 동의합니다"
+            label="Agree to the Terms and Conditions."
             id="policy"
             onChange={handleChange}
             isInvalid={policyError}
             checked={formData.policy}
           />
         </Form.Group>
-        <Button 
-          variant="danger" 
-          type="submit" 
-          disabled={loading}
-        >
-          {loading ? (
-            <div className="d-flex align-items-center gap-2">
-              <span className="spinner-border spinner-border-sm" />
-              <span>처리중...</span>
-            </div>
+        <Form.Group className="mb-3">
+          <Form.Check
+            type="checkbox"
+            label="관리자 계정"
+            id="admin"
+            onChange={handleChange}
+            isInvalid={policyError}
+            checked={formData.admin}
+          />
+        </Form.Group>
+        <Button variant="danger" type="submit" disabled={loading}>
+        {loading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />
+              <span className="ms-2">Loading...</span>
+            </>
           ) : (
-            "회원가입"
+            'Sign up'
           )}
         </Button>
       </Form>

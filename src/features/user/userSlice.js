@@ -1,21 +1,28 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import api from "../../utils/api";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
 import { showToastMessage } from "../common/uiSlice";
+import api from "../../utils/api";
+import { initialCart } from "../cart/cartSlice";
 
 export const loginWithEmail = createAsyncThunk(
   "user/loginWithEmail",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await api.post("auth/login", { email, password });
-      //성공
-      //Loginpage
-      //토큰저장
-      sessionStorage.setItem("token", response.data.token);
-      return response.data;
+      const response = await api.post("/user/login", {
+        email,
+        password,
+      });
+
+      if(response.status === 200) {
+        sessionStorage.setItem("token", response.data.token);   // session에 token 저장
+
+        return response.data;
+      }
+
     } catch (error) {
-      //실패
-      // 실패 시 생긴 에러값을 reducer에 저장
-      return rejectWithValue(error.error);
+
+      // error.[key] 로 접근 가능 (error.response는 접근 불가)
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -26,43 +33,51 @@ export const loginWithGoogle = createAsyncThunk(
 );
 
 export const logout = () => (dispatch) => {
-  // 세션스토리지에서 토큰 제거
-  sessionStorage.removeItem('token');
-  
-  // 유저 상태 초기화
-  dispatch(userSlice.actions.clearUser());
+  sessionStorage.removeItem("token");
+  window.location.reload();
 };
 
 export const registerUser = createAsyncThunk(
   "user/registerUser",
   async (
-    { email, name, password, navigate },
+    { email, name, password, admin, navigate },
     { dispatch, rejectWithValue }
   ) => {
     try {
-      const response = await api.post("/user", { email, name, password });
-      // 성공
-      // 1. 성공 토스트 메시지 보여주기
-      dispatch(
-        showToastMessage({
-          message: "회원가입이 완료되었습니다.",
-          status: "success",
-        })
-      );
-      // 2. 로그인 페이지로 리다이렉트
-      navigate("/login");
-      return response.data.data;
+      const level = admin ? "admin" : "customer";
+
+      const response = await api.post("/user", {
+        email,
+        name,
+        password,
+        level,
+      });
+      const status = response.status;
+
+      if(status === 200) {
+        dispatch(showToastMessage({
+          message: "Success for Sing up", 
+          status: "success"
+        }));
+        navigate("/login");
+
+        return response.data.data;
+      }
+      
     } catch (error) {
-      // 실패
-      // 1. 실패 토스트 메세지
-      dispatch(
-        showToastMessage({
-          message: "회원가입에 실패하였습니다.",
-          status: "fail",
-        })
-      );
-      // 2. 에러 상태 저장
-      return rejectWithValue(error.error);
+      const status = error.status;
+      if(status === "fail") {
+          dispatch(showToastMessage({
+            message: error.message, 
+            status: "error"
+        }));
+      } else {
+        dispatch(showToastMessage({
+          message: "Failure for Sing up", 
+        status: "error"
+        }));
+      }
+      return rejectWithValue(error.response.data);
     }
   }
 );
@@ -71,10 +86,13 @@ export const loginWithToken = createAsyncThunk(
   "user/loginWithToken",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("/user/me" );
-      return response.data;
+      const response = await api.get("/user/session");
+
+      if(response.status === 200) {
+        return response.data;
+      }
     } catch (error) {
-      return rejectWithValue(error.error);
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -93,40 +111,60 @@ const userSlice = createSlice({
       state.loginError = null;
       state.registrationError = null;
     },
-    clearUser: (state) => {
-      state.user = null;
-      state.loginError = null;
-    },
   },
   extraReducers: (builder) => {
+    
     builder
-      .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.registrationError = null;
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
-        state.registrationError = action.payload;
-      })
-      .addCase(loginWithEmail.pending, (state, action) => {
-        state.loading = true;
-      })
-      .addCase(loginWithEmail.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.loginError = null;
-      })
-      .addCase(loginWithEmail.rejected, (state, action) => {
-        state.loading = false;
-        state.loginError = action.payload;
-      })
-      .addCase(loginWithToken.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-      });
+    .addCase(registerUser.pending, (state) => {
+      // 회원가입 pending
+      state.loading = true;
+
+    })
+    .addCase(registerUser.fulfilled, (state) => {
+      // 회원가입 fulfilled
+      state.loading = false;
+      state.registrationError = null;
+
+    })
+    .addCase(registerUser.rejected, (state, action) => {
+      // 회원가입 rejected
+      state.registrationError = action.payload;
+      state.loading = false;
+
+    })
+    .addCase(loginWithEmail.pending, (state) => {
+      // 로그인 pending
+      state.loading = true;
+
+    })
+    .addCase(loginWithEmail.fulfilled, (state, action) => {
+      // 로그인 fulfilled
+      state.loading = false;
+      state.user = action.payload.user;
+      state.loginError = null;
+
+    })
+    .addCase(loginWithEmail.rejected, (state, action) => {
+      // 로그인 rejected
+      state.loginError = action.payload;
+      state.loading = false;
+      state.user = null;
+
+    })
+    .addCase(loginWithToken.fulfilled, (state, action) => {
+      // 토큰 로그인 fulfilled
+      state.loading = false;
+      state.user = action.payload.user;
+
+    })
+    .addCase(loginWithToken.rejected, (state, action) => {
+      // 토큰 로그인 rejected
+      state.loginError = action.payload;
+      state.loading = false;
+      state.user = null;
+
+    });
   },
 });
-export const { clearErrors, clearUser } = userSlice.actions;
+export const { clearErrors } = userSlice.actions;
 export default userSlice.reducer;

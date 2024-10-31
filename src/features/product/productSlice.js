@@ -7,10 +7,10 @@ export const getProductList = createAsyncThunk(
   "products/getProductList",
   async (query, { rejectWithValue }) => {
     try {
-      const response = await api.get("/product", { 
-        params: query  // 쿼리 파라미터 전달 방법
+      const response = await api.get("/product", {
+        params: { ...query }, // 쿼리 파라미터 전달 방법
       });
-      
+
       if (response.status !== 200) {
         throw new Error(response.error);
       }

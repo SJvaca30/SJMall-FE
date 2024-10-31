@@ -82,6 +82,11 @@ const AdminProductPage = () => {
     );
   }
 
+  // searchbokx에서 검색어를 읽어오기 => 엔터를 치면 => searchQuery객체가 업데이트 된다 ex) {name: 스트레이트 팬츠}
+  // => searchquery 객체 안에 아이템 기준으로 url을 새로 생성해서 호출 ex) &name=스트레이트+팬츠
+  // => url 쿼리 읽어오기 => url쿼리 기준으로 BE에 검색조건과함께 호출한다
+  
+
   return (
     <div className="locate-center">
       <Container>

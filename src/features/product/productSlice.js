@@ -54,10 +54,12 @@ export const editProduct = createAsyncThunk(
   async ({ id, ...formData }, { dispatch, rejectWithValue }) => {
     try {
       const response = await api.put(`/product/${id}`, formData);
+      console.log("editProduct response:", response); // 추가
       if (response.status !== 200) throw new Error(response.error);
       dispatch(getProductList({ page: 1 }));
       return response.data.data;
     } catch (error) {
+      console.log("editProduct error:", error); // 추가
       return rejectWithValue(error.error);
     }
   }

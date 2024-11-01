@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
-import ProductCard from "./components/ProductCard";
-import { Row, Col, Container } from "react-bootstrap";
-import { useSearchParams } from "react-router-dom";
+import { Col, Container, Row } from "react-bootstrap";
+import { ColorRing } from "react-loader-spinner";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { getProductList } from "../../features/product/productSlice";
+import ProductCard from "./components/ProductCard";
 
 const LandingPage = () => {
   const dispatch = useDispatch();
-
-  const productList = useSelector((state) => state.product.productList);
+  const { productList, loading } = useSelector((state) => state.product);
   const [query] = useSearchParams();
   const name = query.get("name");
+
   useEffect(() => {
     dispatch(
       getProductList({
@@ -18,6 +19,25 @@ const LandingPage = () => {
       })
     );
   }, [query]);
+
+  if (loading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "60vh" }}
+      >
+        <ColorRing
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+          colors={["#e15b64", "#f47e60", "#f8b26a", "#abbd81", "#849b87"]}
+        />
+      </div>
+    );
+  }
 
   return (
     <Container>
@@ -30,7 +50,7 @@ const LandingPage = () => {
           ))
         ) : (
           <div className="text-align-center empty-bag">
-            {name === "" ? (
+            {name === null ? (
               <h2>등록된 상품이 없습니다.</h2>
             ) : (
               <h2>다음 결과가 없습니다. '{name}'</h2>

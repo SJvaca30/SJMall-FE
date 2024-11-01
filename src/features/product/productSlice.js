@@ -114,6 +114,7 @@ const productSlice = createSlice({
     categories: [],
     categoryLoading: false,
   },
+
   reducers: {
     setSelectedProduct: (state, action) => {
       state.selectedProduct = action.payload;
@@ -126,6 +127,7 @@ const productSlice = createSlice({
       state.success = false;
     },
   },
+  
   extraReducers: (builder) => {
     builder
       .addCase(createProduct.pending, (state) => {

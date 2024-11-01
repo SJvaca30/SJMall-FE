@@ -4,7 +4,10 @@ import ReactPaginate from "react-paginate";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBox from "../../common/component/SearchBox";
-import { getProductList } from "../../features/product/productSlice";
+import {
+  getProductList,
+  setSelectedProduct,
+} from "../../features/product/productSlice";
 import NewItemDialog from "./component/NewItemDialog";
 import ProductTable from "./component/ProductTable";
 
@@ -53,7 +56,10 @@ const AdminProductPage = () => {
 
   const openEditForm = (product) => {
     //edit모드로 설정하고
+    setMode("edit");
     // 아이템 수정다이얼로그 열어주기
+    dispatch(setSelectedProduct(product));
+    setShowDialog(true);
   };
 
   const handleClickNewItem = () => {

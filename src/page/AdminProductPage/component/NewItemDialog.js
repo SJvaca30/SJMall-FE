@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Form, Button, Row, Col, Badge } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Badge, Button, Col, Form, Modal, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import CloudinaryUploadWidget from "../../../utils/CloudinaryUploadWidget";
-import { CATEGORY, STATUS, SIZE } from "../../../constants/product.constants";
-import "../style/adminProduct.style.css";
 import {
   clearError,
   createProduct,
+  deleteCategory,
   editProduct,
   getCategories,
   putCategories,
-  deleteCategory,
 } from "../../../features/product/productSlice";
-import FormCheckInput from "react-bootstrap/esm/FormCheckInput";
+import "../style/adminProduct.style.css";
 
 const InitialFormData = {
   name: "",
@@ -26,9 +23,9 @@ const InitialFormData = {
 };
 
 const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
-  const { error, success, selectedProduct, categories, categoryLoading } = useSelector(
-    (state) => state.product
-  );
+  console.log("NewItemDialog mode:", mode);
+  const { error, success, selectedProduct, categories, categoryLoading } =
+    useSelector((state) => state.product);
   const [formData, setFormData] = useState(
     mode === "new" ? { ...InitialFormData } : selectedProduct
   );
@@ -78,7 +75,7 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
     setFormData({ ...InitialFormData });
     setStock([]);
     setAddCategory("");
-    setShowDialog(false); 
+    setShowDialog(false);
   };
 
   const handleSubmit = (event) => {
@@ -98,7 +95,7 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
 
     if (formData.category.length === 0) {
       return setCategoryError(true);
-    } 
+    }
 
     // 재고를 배열에서 객체로 바꿔주기
     // [['M',2]] 에서 {M:2}로
@@ -111,6 +108,9 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
       dispatch(createProduct({ ...formData, stock: totalStock }));
     } else {
       // 상품 수정하기
+      dispatch(
+        editProduct({ ...formData, stock: totalStock, id: selectedProduct._id })
+      );
     }
   };
 
@@ -119,7 +119,7 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
 
     //form에 데이터 넣어주기
     setFormData({
-      ...formData,  // ... 비구조화 할당
+      ...formData, // ... 비구조화 할당
       [id]: value,
     });
   };
@@ -182,23 +182,25 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
 
   const submitNewCategory = () => {
     // 새로운 카테고리 추가
-    dispatch(putCategories({category: addCategory}));
+    dispatch(putCategories({ category: addCategory }));
   };
 
   const handleDeleteCategory = (id) => {
-    dispatch(deleteCategory({id: id}));
+    dispatch(deleteCategory({ id: id }));
   };
 
   return (
-    <Modal 
-      show={showDialog} 
+    <Modal
+      show={showDialog}
       onHide={handleClose}
       size="lg"
       centered
       className="product-modal"
     >
       <Modal.Header closeButton className="bg-dark text-white">
-        <Modal.Title>{mode === "new" ? "새 상품 등록" : "상품 수정"}</Modal.Title>
+        <Modal.Title>
+          {mode === "new" ? "새 상품 등록" : "상품 수정"}
+        </Modal.Title>
       </Modal.Header>
 
       <Modal.Body className="p-4">
@@ -244,29 +246,33 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
               <Form.Group className="mb-3">
                 <Form.Label>이미지</Form.Label>
                 <div className="d-grid">
-                  <Button 
+                  <Button
                     variant="outline-secondary"
-                    onClick={() => window.cloudinary.openUploadWidget(
-                      {
-                        cloud_name: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
-                        upload_preset: process.env.REACT_APP_CLOUDINARY_PRESET,
-                      },
-                      (error, result) => {
-                        if (!error && result.event === "success") {
-                          uploadImage(result.info.url);
+                    onClick={() =>
+                      window.cloudinary.openUploadWidget(
+                        {
+                          cloud_name:
+                            process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
+                          upload_preset:
+                            process.env.REACT_APP_CLOUDINARY_PRESET,
+                        },
+                        (error, result) => {
+                          if (!error && result.event === "success") {
+                            uploadImage(result.info.url);
+                          }
                         }
-                      }
-                    )}
+                      )
+                    }
                   >
                     이미지 업로드
                   </Button>
                 </div>
                 {formData.image && (
-                  <img 
-                    src={formData.image} 
-                    alt="상품 이미지" 
+                  <img
+                    src={formData.image}
+                    alt="상품 이미지"
                     className="mt-2 img-thumbnail"
-                    style={{maxHeight: "150px"}}
+                    style={{ maxHeight: "150px" }}
                   />
                 )}
               </Form.Group>
@@ -280,23 +286,20 @@ const NewItemDialog = ({ mode, showDialog, setShowDialog }) => {
                     onChange={handleAddCategory}
                     placeholder="새 카테고리"
                   />
-                  <Button 
-                    variant="outline-primary"
-                    onClick={submitNewCategory}
-                  >
+                  <Button variant="outline-primary" onClick={submitNewCategory}>
                     추가
                   </Button>
                 </div>
                 <div className="d-flex flex-wrap gap-2">
                   {categories.map((item) => (
-                    <Badge 
-                      bg="secondary" 
+                    <Badge
+                      bg="secondary"
                       key={item._id}
                       className="p-2 d-flex align-items-center"
                     >
                       {item.name}
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="link"
                         className="p-0 ms-2 text-white"
                         onClick={() => handleDeleteCategory(item._id)}
                       >

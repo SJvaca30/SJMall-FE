@@ -34,11 +34,12 @@ export const createProduct = createAsyncThunk(
         throw new Error(response.error);
       }
       dispatch(
-        showToastMessage({ message: "Success add new Item", status: "success" })
+        showToastMessage({ message: "상품 생성 료카이", status: "success" })
       );
+      dispatch(getProductList({ page: 1 }));
       return response.data.data;
     } catch (err) {
-      return rejectWithValue(err.message);
+      return rejectWithValue(err.error);
     }
   }
 );
@@ -50,7 +51,16 @@ export const deleteProduct = createAsyncThunk(
 
 export const editProduct = createAsyncThunk(
   "products/editProduct",
-  async ({ id, ...formData }, { dispatch, rejectWithValue }) => {}
+  async ({ id, ...formData }, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await api.put(`/product/${id}`, formData);
+      if (response.status !== 200) throw new Error(response.error);
+      dispatch(getProductList({ page: 1 }));
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.error);
+    }
+  }
 );
 
 // 카테고리 목록 조회 추가
@@ -114,7 +124,6 @@ const productSlice = createSlice({
     categories: [],
     categoryLoading: false,
   },
-
   reducers: {
     setSelectedProduct: (state, action) => {
       state.selectedProduct = action.payload;
@@ -127,7 +136,6 @@ const productSlice = createSlice({
       state.success = false;
     },
   },
-  
   extraReducers: (builder) => {
     builder
       .addCase(createProduct.pending, (state) => {
@@ -181,6 +189,19 @@ const productSlice = createSlice({
       .addCase(getProductList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(editProduct.pending, (state, action) => {
+        state.loading = true;
+      })
+      .addCase(editProduct.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = "";
+        state.success = true;
+      })
+      .addCase(editProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
       });
   },
 });

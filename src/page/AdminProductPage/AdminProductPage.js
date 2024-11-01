@@ -56,15 +56,19 @@ const AdminProductPage = () => {
 
   const openEditForm = (product) => {
     //edit모드로 설정하고
+    console.log("직전 mode:", mode);
     setMode("edit");
     // 아이템 수정다이얼로그 열어주기
     dispatch(setSelectedProduct(product));
     setShowDialog(true);
+    console.log("직후 mode:", mode);
   };
 
   const handleClickNewItem = () => {
     //new 모드로 설정하고
+    console.log("직전 mode:", mode);
     setMode("new");
+    console.log("직후 mode:", mode);
 
     // 다이얼로그 열어주기
     setShowDialog(true);
